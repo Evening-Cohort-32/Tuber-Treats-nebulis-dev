@@ -480,6 +480,60 @@ app.MapDelete("/api/customers/{id}", (int id) =>
     }
 });
 
+//Driver Endpoints
+
+//Get all Drivers
+app.MapGet("/api/tuberdrivers", () =>
+{
+    return tuberDrivers.Select(td => new TuberDriverDTO
+    {
+        Id = td.Id,
+        Name = td.Name
+    });
+});
+
+//Get one Driver by Id
+app.MapGet("/api/tuberdrivers/{id}", (int id) =>
+{
+    TuberDriver tuberDriver = tuberDrivers.FirstOrDefault(td => td.Id == id);
+    if (tuberDriver == null)
+    {
+        return Results.NotFound();
+    }
+
+    List<TuberOrder> driverOrders = tuberOrders
+        .Where(to => to.TuberDriverId == id)
+        .ToList();
+
+    return Results.Ok(new TuberDriverDTO
+    {
+        Id = tuberDriver.Id,
+        Name = tuberDriver.Name,
+        TuberDeliveries = driverOrders.Select(dO => new TuberOrderDTO
+        {
+            Id = dO.Id,
+            Customer = customers
+                .Where(c => c.Id == dO.CustomerId)
+                .Select(c => new CustomerDTO
+                {
+                    Id = c.Id,
+                    Name = c.Name,
+                    Address = c.Address
+                })
+                .FirstOrDefault(),
+            OrderPlacedOnDate = dO.OrderPlacedOnDate,
+            DeliveredOnDate = dO.DeliveredOnDate,
+            Toppings = tuberToppings
+                .Where(tt => tt.TuberOrderId == dO.Id)
+                .Select(tt => toppings.First(t => t.Id == tt.ToppingId))
+                .Select(t => new ToppingDTO
+                {
+                    Id = t.Id,
+                    Name = t.Name
+                }).ToList()
+        }).ToList()
+    });
+});
 
 app.Run();
 //don't touch or move this!
