@@ -388,13 +388,99 @@ app.MapDelete("/api/tubertoppings/{id}", (int id) =>
     TuberTopping toppingToDelete = tuberToppings.FirstOrDefault(tt => tt.Id == id);
     if (toppingToDelete == null)
     {
-        return Results.NotFound();
+        return Results.BadRequest();
     }
     else
     {
         return Results.Ok(tuberToppings.Remove(toppingToDelete));    
     }
 });
+
+//Customer Endpoints
+
+//Get All Customers
+app.MapGet("/api/customers", () =>
+{
+    return customers.Select(c => new CustomerDTO
+    {
+        Id = c.Id,
+        Name = c.Name,
+        Address = c.Address
+    });
+});
+
+//Get One Customer by Id
+app.MapGet("/api/customers/{id}", (int id) =>
+{
+    Customer customer = customers.FirstOrDefault(c => c.Id == id);
+    if (customer == null)
+    {
+        return Results.NotFound();
+    }
+
+    List<TuberOrder> customerOrders = tuberOrders
+        .Where(to => to.CustomerId == id)
+        .ToList();
+
+    return Results.Ok(new CustomerDTO
+    {
+        Id = customer.Id,
+        Name = customer.Name,
+        Address = customer.Address,
+        TuberOrders = customerOrders.Select(co => new TuberOrderDTO
+        {
+            Id = co.Id,
+            TuberDriverId = co.TuberDriverId,
+            TuberDriver = tuberDrivers
+                .Where(d => d.Id == co.TuberDriverId)
+                .Select(d => new TuberDriverDTO
+                {
+                    Name = d.Name
+                })
+                .FirstOrDefault(),
+            OrderPlacedOnDate = co.OrderPlacedOnDate,
+            DeliveredOnDate = co.DeliveredOnDate,
+            Toppings = tuberToppings
+                .Where(tt => tt.TuberOrderId == co.Id)
+                .Select(tt => toppings.First(t => t.Id == tt.ToppingId))
+                .Select(t => new ToppingDTO
+                {
+                    Id = t.Id,
+                    Name = t.Name
+                }).ToList()
+        }).ToList()
+    });
+});
+
+//Create Customer
+app.MapPost("/api/customers", (Customer customer) =>
+{
+    customer.Id = customers.Max(c => c.Id) + 1;
+    customers.Add(customer);
+
+    return(new CustomerDTO
+    {
+        Id = customer.Id,
+        Name = customer.Name,
+        Address = customer.Address
+    });
+});
+
+//Delete Customer
+app.MapDelete("/api/customers/{id}", (int id) =>
+{
+    Customer customerToDelete = customers.FirstOrDefault(c => c.Id == id);
+    if (customerToDelete == null)
+    {
+        return Results.BadRequest();
+    }
+    else
+    {
+        return Results.Ok(customers.Remove(customerToDelete));
+    }
+});
+
+
 app.Run();
 //don't touch or move this!
 public partial class Program { }
