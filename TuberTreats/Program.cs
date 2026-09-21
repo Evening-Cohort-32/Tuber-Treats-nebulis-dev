@@ -343,8 +343,58 @@ app.MapGet("/api/toppings/{id}", (int id) =>
     });
 });
 
+//TuberToppings Endpoints
 
+//Get All TuberToppings
+app.MapGet("/api/tubertoppings", () =>
+{
+    return tuberToppings.Select(tt => new TuberToppingDTO
+    {
+        Id = tt.Id,
+        TuberOrderId = tt.TuberOrderId,
+        ToppingId = tt.ToppingId
+    });
+});
 
+//Add TuberTopping to TuberOrder
+app.MapPost("/api/tubertoppings", (TuberTopping tuberTopping) =>
+{
+    TuberOrder tuberOrder = tuberOrders.FirstOrDefault(to => to.Id == tuberTopping.TuberOrderId);
+    if (tuberOrder == null)
+    {
+        return Results.BadRequest();
+    }
+
+    Topping topping = toppings.FirstOrDefault(t => t.Id == tuberTopping.ToppingId);
+    if (topping == null)
+    {
+        return Results.BadRequest();
+    }
+
+    tuberTopping.Id = tuberToppings.Max(tt => tt.Id) + 1;
+    tuberToppings.Add(tuberTopping);
+
+    return Results.Ok(new TuberToppingDTO
+    {
+        Id = tuberTopping.Id,
+        TuberOrderId = tuberTopping.TuberOrderId,
+        ToppingId = tuberTopping.ToppingId
+    });
+});
+
+//Remove TuberTopping from TuberOrder
+app.MapDelete("/api/tubertoppings/{id}", (int id) =>
+{
+    TuberTopping toppingToDelete = tuberToppings.FirstOrDefault(tt => tt.Id == id);
+    if (toppingToDelete == null)
+    {
+        return Results.NotFound();
+    }
+    else
+    {
+        return Results.Ok(tuberToppings.Remove(toppingToDelete));    
+    }
+});
 app.Run();
 //don't touch or move this!
 public partial class Program { }
