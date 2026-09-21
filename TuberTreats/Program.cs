@@ -453,12 +453,12 @@ app.MapGet("/api/customers/{id}", (int id) =>
 });
 
 //Create Customer
-app.MapPost("/api/customers", (Customer customer) =>
+app.MapPost("/api/customers/", (Customer customer) =>
 {
     customer.Id = customers.Max(c => c.Id) + 1;
     customers.Add(customer);
 
-    return(new CustomerDTO
+    return Results.Created("/api/customers/{customer.id}", new CustomerDTO
     {
         Id = customer.Id,
         Name = customer.Name,
