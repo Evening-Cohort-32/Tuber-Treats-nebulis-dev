@@ -315,6 +315,36 @@ app.MapPost("/api/tuberorders/{id}/complete", (int id) =>
     orderToComplete.DeliveredOnDate = DateTime.Now;
 });
 
+//Topping endpoints
+
+//Get All Toppings
+app.MapGet("/api/toppings", () =>
+{
+    return toppings.Select(t => new ToppingDTO
+    {
+       Id =  t.Id,
+       Name = t.Name
+    });
+});
+
+//Get One Topping
+app.MapGet("/api/toppings/{id}", (int id) =>
+{
+    Topping topping = toppings.FirstOrDefault(t => t.Id == id);
+    if (topping == null)
+    {
+        return Results.NotFound();
+    }
+
+    return Results.Ok(new ToppingDTO
+    {
+        Id = topping.Id,
+        Name = topping.Name
+    });
+});
+
+
+
 app.Run();
 //don't touch or move this!
 public partial class Program { }
