@@ -1,6 +1,5 @@
 using System.Formats.Tar;
 using TuberTreats.Models;
-using TuberTreats.Models.DTO;
 // ^Calls on all files with a matching namespace
 
 //Database Lists
@@ -194,7 +193,7 @@ app.UseAuthorization();
 // Get All TuberOrders
 app.MapGet("/api/tuberorders", () =>        // Sets GET API endpoint for communicating to the server and runs the following function with no request in the parameter
 {
-    return tuberOrders.Select(to => new TuberOrderDTO       // Goes through all of the items in the selected list and creates/returns a new DTO(Data Transferrable Object) for each object
+    return tuberOrders.Select(to => new TuberOrder       // Goes through all of the items in the selected list and creates/returns a new DTO(Data Transferrable Object) for each object
     {
         Id = to.Id,                                         // Sets the Id of the DTO to the Id of the original Object
         CustomerId = to.CustomerId,                         // Sets the CustomerId of the DTO to the CustomerId of the original Object
@@ -222,25 +221,25 @@ app.MapGet("/api/tuberorders/{id}", (int id) =>     // Sets GET API endpoint lik
         .Select(tt => toppings.First(t => t.Id == tt.ToppingId))        // Checks for which Topping object contains an Id that matches the ToppingId parameter in the select TuberTopping join table 
         .ToList();                                                      // Pushes all selected Toppings to the list of toppingSelection
 
-    return Results.Ok(new TuberOrderDTO                                 // Returns an OK results and executes creating a new TuberOrderDTO
+    return Results.Ok(new TuberOrder                                 // Returns an OK results and executes creating a new TuberOrderDTO
     {
         Id = tuberOrder.Id,                                             // Sets the Id of the DTO
         CustomerId = tuberOrder.CustomerId,                             // Sets the CustomerId of the DTO
-        Customer = new CustomerDTO                                      // Creates a new CustomerDTO based on the previously selected Customer Object
+        Customer = new Customer                                      // Creates a new CustomerDTO based on the previously selected Customer Object
         {
             Id = customer.Id,                                           // Sets Customer DTO data
             Name = customer.Name,
             Address = customer.Address
         },
         TuberDriverId = tuberOrder.TuberDriverId,                       // Sets the TuberDriverId of the DTO
-        TuberDriver = new TuberDriverDTO                                // Creates a new TuberDriverDTO based on the previously selected TuberDriver Object
+        TuberDriver = new TuberDriver                                // Creates a new TuberDriverDTO based on the previously selected TuberDriver Object
         {
             Id = tuberDriver.Id,                                        // Sets TuberDriver DTO data
             Name = tuberDriver.Name
         },
         OrderPlacedOnDate = tuberOrder.OrderPlacedOnDate,               // Sets the Order Date Data of the DTO
         DeliveredOnDate = tuberOrder.DeliveredOnDate,                   // Sets the Delivery Date Data of the DTO
-        Toppings = toppingSelection.Select(ts => new ToppingDTO         // Pushes DTOs of all of the previously selected toppings to the Toppings list in the Object
+        Toppings = toppingSelection.Select(ts => new Topping         // Pushes DTOs of all of the previously selected toppings to the Toppings list in the Object
         {
             Id = ts.Id,
             Name = ts.Name
@@ -266,18 +265,18 @@ app.MapPost("/api/tuberorders", (TuberOrder tuberOrder) =>      // Sets a Post A
         .Select(tt => toppings.First(t => t.Id == tt.ToppingId))
         .ToList();
 
-    return Results.Created($"/api/tuberorders/{tuberOrder.Id}", new TuberOrderDTO       // Creates new TuberOrderDTO to be posted to the database
+    return Results.Created($"/api/tuberorders/{tuberOrder.Id}", new TuberOrder       // Creates new TuberOrderDTO to be posted to the database
     {
         Id = tuberOrder.Id,                                                             // You know the drill at this point
         CustomerId = tuberOrder.CustomerId,
-        Customer = new CustomerDTO
+        Customer = new Customer
         {
             Id = customer.Id,
             Name = customer.Name,
             Address = customer.Address
         },
         OrderPlacedOnDate = DateTime.Now,                                               // Except for this, this is different, it sets the Order Date to be when the Post request is called
-        Toppings = toppingSelection.Select(ts => new ToppingDTO
+        Toppings = toppingSelection.Select(ts => new Topping
         {
             Id = ts.Id,
             Name = ts.Name
@@ -320,7 +319,7 @@ app.MapPost("/api/tuberorders/{id}/complete", (int id) =>
 //Get All Toppings
 app.MapGet("/api/toppings", () =>
 {
-    return toppings.Select(t => new ToppingDTO
+    return toppings.Select(t => new Topping
     {
        Id =  t.Id,
        Name = t.Name
@@ -336,7 +335,7 @@ app.MapGet("/api/toppings/{id}", (int id) =>
         return Results.NotFound();
     }
 
-    return Results.Ok(new ToppingDTO
+    return Results.Ok(new Topping
     {
         Id = topping.Id,
         Name = topping.Name
@@ -348,7 +347,7 @@ app.MapGet("/api/toppings/{id}", (int id) =>
 //Get All TuberToppings
 app.MapGet("/api/tubertoppings", () =>
 {
-    return tuberToppings.Select(tt => new TuberToppingDTO
+    return tuberToppings.Select(tt => new TuberTopping
     {
         Id = tt.Id,
         TuberOrderId = tt.TuberOrderId,
@@ -374,7 +373,7 @@ app.MapPost("/api/tubertoppings", (TuberTopping tuberTopping) =>
     tuberTopping.Id = tuberToppings.Max(tt => tt.Id) + 1;
     tuberToppings.Add(tuberTopping);
 
-    return Results.Ok(new TuberToppingDTO
+    return Results.Ok(new TuberTopping
     {
         Id = tuberTopping.Id,
         TuberOrderId = tuberTopping.TuberOrderId,
@@ -401,7 +400,7 @@ app.MapDelete("/api/tubertoppings/{id}", (int id) =>
 //Get All Customers
 app.MapGet("/api/customers", () =>
 {
-    return customers.Select(c => new CustomerDTO
+    return customers.Select(c => new Customer
     {
         Id = c.Id,
         Name = c.Name,
@@ -422,18 +421,18 @@ app.MapGet("/api/customers/{id}", (int id) =>
         .Where(to => to.CustomerId == id)
         .ToList();
 
-    return Results.Ok(new CustomerDTO
+    return Results.Ok(new Customer
     {
         Id = customer.Id,
         Name = customer.Name,
         Address = customer.Address,
-        TuberOrders = customerOrders.Select(co => new TuberOrderDTO
+        TuberOrders = customerOrders.Select(co => new TuberOrder
         {
             Id = co.Id,
             TuberDriverId = co.TuberDriverId,
             TuberDriver = tuberDrivers
                 .Where(d => d.Id == co.TuberDriverId)
-                .Select(d => new TuberDriverDTO
+                .Select(d => new TuberDriver
                 {
                     Name = d.Name
                 })
@@ -443,7 +442,7 @@ app.MapGet("/api/customers/{id}", (int id) =>
             Toppings = tuberToppings
                 .Where(tt => tt.TuberOrderId == co.Id)
                 .Select(tt => toppings.First(t => t.Id == tt.ToppingId))
-                .Select(t => new ToppingDTO
+                .Select(t => new Topping
                 {
                     Id = t.Id,
                     Name = t.Name
@@ -458,7 +457,7 @@ app.MapPost("/api/customers/", (Customer customer) =>
     customer.Id = customers.Max(c => c.Id) + 1;
     customers.Add(customer);
 
-    return Results.Created("/api/customers/{customer.id}", new CustomerDTO
+    return Results.Created("/api/customers/{customer.id}", new Customer
     {
         Id = customer.Id,
         Name = customer.Name,
@@ -485,7 +484,7 @@ app.MapDelete("/api/customers/{id}", (int id) =>
 //Get all Drivers
 app.MapGet("/api/tuberdrivers", () =>
 {
-    return tuberDrivers.Select(td => new TuberDriverDTO
+    return tuberDrivers.Select(td => new TuberDriver
     {
         Id = td.Id,
         Name = td.Name
@@ -505,16 +504,16 @@ app.MapGet("/api/tuberdrivers/{id}", (int id) =>
         .Where(to => to.TuberDriverId == id)
         .ToList();
 
-    return Results.Ok(new TuberDriverDTO
+    return Results.Ok(new TuberDriver
     {
         Id = tuberDriver.Id,
         Name = tuberDriver.Name,
-        TuberDeliveries = driverOrders.Select(dO => new TuberOrderDTO
+        TuberDeliveries = driverOrders.Select(dO => new TuberOrder
         {
             Id = dO.Id,
             Customer = customers
                 .Where(c => c.Id == dO.CustomerId)
-                .Select(c => new CustomerDTO
+                .Select(c => new Customer
                 {
                     Id = c.Id,
                     Name = c.Name,
@@ -526,7 +525,7 @@ app.MapGet("/api/tuberdrivers/{id}", (int id) =>
             Toppings = tuberToppings
                 .Where(tt => tt.TuberOrderId == dO.Id)
                 .Select(tt => toppings.First(t => t.Id == tt.ToppingId))
-                .Select(t => new ToppingDTO
+                .Select(t => new Topping
                 {
                     Id = t.Id,
                     Name = t.Name
